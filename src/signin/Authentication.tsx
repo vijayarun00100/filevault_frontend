@@ -61,7 +61,10 @@ const LoginForm = () => {
       
       if (result.data?.login?.token) {
         localStorage.setItem('authToken', result.data.login.token);
-        localStorage.setItem('user', JSON.stringify(result.data.login.user));
+        localStorage.setItem('user', JSON.stringify({
+          ...result.data.login.user,
+          token: result.data.login.token
+        }));
         
         notifySuccess(`Welcome back, ${result.data.login.user.name}!`);
         navigate('/main');

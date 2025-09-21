@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ApolloClient, HttpLink, InMemoryCache, gql } from '@apollo/client';
-import { ApolloProvider, useQuery } from '@apollo/client/react';
+import { ApolloClient, HttpLink, InMemoryCache, gql, from } from '@apollo/client';
+import { ApolloProvider, useQuery, useLazyQuery, useMutation } from '@apollo/client/react';
+import { setContext } from '@apollo/client/link/context';
 import { toast } from 'react-toastify';
 import { IconType } from 'react-icons';
 import { 
@@ -19,24 +20,42 @@ import {
   MdCode,
   MdArchive,
   MdClear,
-  MdDescription
+  MdDescription,
+  MdDownload,
+  MdShare
 } from 'react-icons/md';
+import { FaUpload, FaSearch, FaTimes, FaDownload, FaShare, FaCloud, FaHdd, FaTrash } from 'react-icons/fa';
 
 interface FileData {
   id: string;
   filename: string;
   path: string;
   uploadedAt: string;
+  downloadFile?: string;
 }
 
 interface UserFilesData {
   userFiles: FileData[];
 }
 
+const authLink = setContext((_, { headers }) => {
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  // console.log('Apollo authLink userData:', userData);
+  // console.log('Apollo authLink token:', userData.token);
+  return {
+    headers: {
+      ...headers,
+      authorization: userData.token ? `Bearer ${userData.token}` : '',
+    }
+  };
+});
+
+const httpLink = new HttpLink({
+  uri: "/query",
+});
+
 const client = new ApolloClient({
-  link: new HttpLink({
-    uri: "/query",
-  }),
+  link: from([authLink, httpLink]),
   cache: new InMemoryCache(),
 });
 
@@ -47,7 +66,38 @@ const GET_USER_FILES = gql`
       filename
       path
       uploadedAt
+      downloadFile
+      size
     }
+  }
+`;
+
+const DOWNLOAD_FILE = gql`
+  query DownloadFile($fileID: ID!) {
+    downloadFile(fileID: $fileID) {
+      id
+      filename
+      path
+      uploadedAt
+      downloadFile
+      size
+    }
+  }
+`;
+
+const GET_STORAGE_INFO = gql`
+  query GetStorageInfo($userID: ID!) {
+    userStorageInfo(userID: $userID) {
+      totalFiles
+      totalSize
+      formattedSize
+    }
+  }
+`;
+
+const DELETE_FILE = gql`
+  mutation DeleteFile($fileID: ID!) {
+    deleteFile(fileID: $fileID)
   }
 `;
 
@@ -97,10 +147,18 @@ const DriveContent = () => {
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { loading, error, data, refetch } = useQuery<UserFilesData>(GET_USER_FILES, {
+  const { data, loading, error, refetch } = useQuery<UserFilesData>(GET_USER_FILES, {
     variables: { userID: storedData.id },
     skip: !storedData.id,
   });
+
+  const { data: storageData, loading: storageLoading } = useQuery(GET_STORAGE_INFO, {
+    variables: { userID: storedData.id },
+    skip: !storedData.id,
+  });
+
+  const [downloadFile] = useLazyQuery(DOWNLOAD_FILE);
+  const [deleteFile] = useMutation(DELETE_FILE);
 
   const uploadFileToServer = async (file: File, onProgress?: (progress: number) => void) => {
     const formData = new FormData();
@@ -131,19 +189,30 @@ const DriveContent = () => {
     formData.append('0', file);
     
     try {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('Upload userData:', userData);
+      console.log('Upload token:', userData.token);
+      
       const response = await fetch('/query', {
         method: 'POST',
+        headers: {
+          'Authorization': userData.token ? `Bearer ${userData.token}` : '',
+        },
         body: formData,
       });
       
       const result = await response.json();
+      console.log('Upload response:', result);
       
       if (result.errors) {
+        console.error('Upload GraphQL errors:', result.errors);
+        console.error('First error details:', result.errors[0]);
         throw new Error(result.errors[0].message);
       }
       
       return result.data.uploadFile;
     } catch (error: any) {
+      console.error('Upload error details:', error);
       throw error;
     }
   };
@@ -188,14 +257,12 @@ const DriveContent = () => {
   };
 
 
-  const filteredFiles = useMemo(() => {
-    if (!data?.userFiles || !searchQuery.trim()) {
-      return data?.userFiles || [];
-    }
-    return data.userFiles.filter(file => 
-      file.filename.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [data?.userFiles, searchQuery]);
+  const files = (data as any)?.userFiles || [];
+  const totalFiles = files.length || 0;
+  
+  const filteredFiles = files.filter((file: any) =>
+    file.filename.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleSearchClick = () => {
     setIsSearchActive(true);
@@ -255,16 +322,98 @@ const DriveContent = () => {
     }
   };
 
+  const handleDownload = async (fileId: string, filename: string) => {
+    try {
+      const { data } = await downloadFile({ variables: { fileID: fileId } });
+      if (data && (data as any).downloadFile && (data as any).downloadFile.downloadFile) {
+        
+        const link = document.createElement('a');
+        link.href = (data as any).downloadFile.downloadFile;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(`Downloading ${filename}`);
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file');
+    }
+  };
+
+  const handleShare = async (fileId: string, filename: string) => {
+    try {
+      
+      const { data } = await downloadFile({ variables: { fileID: fileId } });
+      if (data && (data as any).downloadFile && (data as any).downloadFile.downloadFile) {
+        
+        const publicUrl = (data as any).downloadFile.downloadFile;
+        const downloadUrl = `${publicUrl}?download=${encodeURIComponent(filename)}`;
+        
+        
+        await navigator.clipboard.writeText(downloadUrl);
+        toast.success(`Share link copied to clipboard!`);
+      } else {
+        throw new Error('Could not get file URL');
+      }
+    } catch (error: any) {
+      console.error('Share error:', error);
+      toast.error('Failed to copy share link');
+    }
+  };
+
+  const handleDelete = async (fileId: string, filename: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${filename}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { data } = await deleteFile({ variables: { fileID: fileId } });
+      if ((data as any)?.deleteFile) {
+        toast.success(`"${filename}" deleted successfully!`);
+        refetch(); // Refresh the file list
+      } else {
+        throw new Error('Delete operation failed');
+      }
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error(`Failed to delete "${filename}"`);
+    }
+  };
+
   return (
     <div className='flex w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
       <div className='flex flex-col w-64 bg-white/70 backdrop-blur-sm border-r border-white/20 h-full shadow-lg'>
         <div className='flex items-center gap-3 p-4 border-b border-white/20'>
-          <div className='w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg'>
-            <span className='text-white font-bold text-lg'>F</span>
+          <div className='w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center'>
+            {React.createElement(FaCloud as React.ComponentType<any>, { className: 'text-white text-xl' })}
           </div>
           <div>
-            <h1 className='text-lg font-semibold text-gray-800'>Hey {storedData.name}!</h1>
-            <p className='text-xs text-gray-600'>Your FileVault</p>
+            <h1 className='text-lg font-semibold text-gray-800'>FileVault</h1>
+            <p className='text-xs text-gray-500'>Cloud Storage</p>
+          </div>
+        </div>
+
+        
+        <div className='p-4 border-b border-white/20'>
+          <div className='bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3'>
+            <div className='flex items-center gap-2 mb-2'>
+              {React.createElement(FaHdd as React.ComponentType<any>, { className: 'text-blue-600' })}
+              <span className='text-sm font-medium text-gray-700'>Storage Used</span>
+            </div>
+            {storageLoading ? (
+              <div className='text-xs text-gray-500'>Loading...</div>
+            ) : (
+              <div>
+                <div className='text-lg font-bold text-gray-800'>
+                  {(storageData as any)?.userStorageInfo?.formattedSize || '0 B'}
+                </div>
+                <div className='text-xs text-gray-500'>
+                  {(storageData as any)?.userStorageInfo?.totalFiles || 0} files
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -412,7 +561,7 @@ const DriveContent = () => {
             </div>
           )}
           
-          {data && data.userFiles && (
+          {!loading && !error && (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
               {filteredFiles.length === 0 ? (
                 <div className='col-span-full flex flex-col items-center justify-center h-64 text-gray-500'>
@@ -442,14 +591,46 @@ const DriveContent = () => {
                   const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
                   
                   return (
-                    <div key={file.id} className='flex flex-col items-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 hover:bg-white/80'>
+                    <div key={file.id} className='flex flex-col items-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:bg-white/80 group'>
                       <div className={`w-20 h-20 ${color} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}>
                         {React.createElement(IconComponent as React.ComponentType<any>, { className: 'text-3xl text-gray-700' })}
                       </div>
                       <h3 className='text-sm font-semibold text-gray-800 text-center mb-2' title={file.filename}>
                         {file.filename.length > 18 ? `${file.filename.substring(0, 18)}...` : file.filename}
                       </h3>
-                      <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full'>Uploaded {uploadDate}</p>
+                      <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full mb-3'>Uploaded {uploadDate}</p>
+                      <div className='flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200'>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(file.id, file.filename);
+                          }}
+                          className='flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors duration-200'
+                        >
+                          {React.createElement(FaDownload as React.ComponentType<any>, { className: 'text-xs' })}
+                          Download
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(file.id, file.filename);
+                          }}
+                          className='flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors duration-200'
+                        >
+                          {React.createElement(FaShare as React.ComponentType<any>, { className: 'text-xs' })}
+                          Share
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(file.id, file.filename);
+                          }}
+                          className='flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors duration-200'
+                        >
+                          {React.createElement(FaTrash as React.ComponentType<any>, { className: 'text-xs' })}
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   );
                 })
@@ -457,6 +638,7 @@ const DriveContent = () => {
             </div>
           )}
         </div>
+        
         <div className='p-4 text-center border-t border-white/20'>
           <p className='text-s text-gray-500'>
             Created by vijayarun :)
