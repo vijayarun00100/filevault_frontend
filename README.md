@@ -96,6 +96,7 @@
 ```bash
 Node.js 18+ and npm
 Git
+Docker (optional, for containerized deployment)
 ```
 
 ### Installation
@@ -166,45 +167,139 @@ REACT_APP_DEV_MODE=true
 
 ---
 
-## 🔧 Available Scripts
+## 🐳 Docker Setup
 
-In the project directory, you can run:
+### Frontend Container Architecture
 
-### `npm start`
+```
+┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │
+│   (React+Nginx) │◄──►│   (Go+GraphQL)  │
+│   Port: 3000    │    │   Port: 8080    │
+└─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   Supabase      │
+                       │   File Storage  │
+                       └─────────────────┘
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Docker Build & Run
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```bash
+# Create Dockerfile in frontend directory
+cat > Dockerfile << EOF
+# Build stage
+FROM node:18-alpine AS builder
 
-### `npm test`
+WORKDIR /app
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Copy package files
+COPY package*.json ./
 
-### `npm run build`
+# Install dependencies
+RUN npm ci --only=production
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Copy source code
+COPY . .
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Build the app
+RUN npm run build
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Production stage
+FROM nginx:alpine
 
-### `npm run eject`
+# Copy built app to nginx
+COPY --from=builder /app/build /usr/share/nginx/html
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+# Copy nginx config (optional)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Expose port
+EXPOSE 80
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+EOF
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+# Build the Docker image
+docker build -t filevault-frontend .
 
-## Learn More
+# Run the container
+docker run -p 3000:80 filevault-frontend
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Docker Compose Integration
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```yaml
+# docker-compose.yml (in root directory)
+version: '3.8'
+
+services:
+  frontend:
+    build: ./filevault_frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_GRAPHQL_ENDPOINT=http://backend:8080/query
+    depends_on:
+      - backend
+
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_CODE=${JWT_CODE}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=filevault
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+### Quick Docker Commands
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs frontend
+
+# Stop services
+docker-compose down
+
+# Rebuild frontend only
+docker-compose build frontend
+docker-compose up -d frontend
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel Deployment
+1. Connect your GitHub repository to Vercel
+2. Set `REACT_APP_GRAPHQL_ENDPOINT` environment variable
+3. Deploy with automatic builds on push
+
+### Docker Production Deployment
+1. Build production image: `docker build -t filevault-frontend:prod .`
+2. Run with environment variables for your backend
+3. Use reverse proxy (nginx) for SSL and domain routing
