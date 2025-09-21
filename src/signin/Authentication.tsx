@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { ApolloClient, HttpLink, InMemoryCache, gql } from "@apollo/client";
 import { ApolloProvider, useMutation } from "@apollo/client/react";
-
+import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 interface LoginResponse {
   login: {
     token: string;
@@ -12,6 +14,7 @@ interface LoginResponse {
     };
   };
 }
+;
 
 const client = new ApolloClient({
   link: new HttpLink({ 
@@ -32,11 +35,18 @@ const LOGIN_MUTATION = gql`
     }
   }
 `;
+const notifyError = (message: string) => {
+  toast.error(message);
+};
 
+const notifySuccess = (message: string) => {
+  toast.success(message);
+};
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [login, { data, loading, error }] = useMutation<LoginResponse>(LOGIN_MUTATION);
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +55,17 @@ const LoginForm = () => {
         variables: { email, password }
       });
       console.log('Login successful:', result.data);
+      
+      if (result.data?.login?.token) {
+        localStorage.setItem('authToken', result.data.login.token);
+        localStorage.setItem('user', JSON.stringify(result.data.login.user));
+        
+        notifySuccess(`Welcome back, ${result.data.login.user.name}!`);
+        navigate('/main');
+      }
     } catch (err) {
       console.error('Login failed:', err);
+      notifyError('Login failed. Please check your credentials.');
     }
   };
 
@@ -95,7 +114,7 @@ const LoginForm = () => {
                 </button>
               </div>
               {error && (
-                <div className='text-red-500 mt-2'>
+                <div className='text-red-500 mt-2 justify-center items-center ml-10'>
                   Error: {error.message}
                 </div>
               )}
