@@ -167,6 +167,50 @@ REACT_APP_DEV_MODE=true
 
 ---
 
+## File Upload Specifications
+
+### Storage Limits
+- **Maximum file size**: 10MB per file
+- **Storage provider**: Supabase Storage
+- **Enforcement**: Server-side validation before upload
+
+### MIME Type Verification
+- **Validation method**: Supabase built-in MIME type checking
+- **Allowed file types**: 
+  - Documents: PDF, DOC, DOCX, TXT
+  - Images: JPG, JPEG, PNG, GIF, WEBP
+  - Archives: ZIP, RAR
+  - Other formats as configured in Supabase
+- **Security**: Files are validated both client-side and server-side
+- **Rejection**: Invalid file types are automatically rejected during upload
+
+---
+
+## GraphQL Schema
+
+### Queries
+```graphql
+type Query {
+  users: [User!]!
+  userFiles(userID: ID!): [File!]!
+  allFiles: [File!]!
+  downloadFile(fileID: ID!): File!
+  userStorageInfo(userID: ID!): StorageInfo!
+}
+```
+
+### Mutations
+```graphql
+type Mutation {
+  createUser(name: String!, email: String!, password: String!): User!
+  login(email: String!, password: String!): AuthPayload!
+  uploadFile(userID: ID!, file: Upload!): File!
+  deleteFile(fileID: ID!): Boolean!
+}
+```
+
+---
+
 ## Docker Setup
 
 ### Frontend Container Architecture
@@ -298,6 +342,19 @@ docker-compose up -d frontend
 1. Connect your GitHub repository to Vercel
 2. Set `REACT_APP_GRAPHQL_ENDPOINT` environment variable
 3. Deploy with automatic builds on push
+
+### Render Deployment
+1. **Create Web Service**: Connect your GitHub repository to Render
+2. **Build Settings**:
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `build`
+   - Node Version: `18.x`
+3. **Environment Variables**:
+   ```
+   REACT_APP_GRAPHQL_ENDPOINT=https://your-backend.onrender.com/query
+   ```
+4. **Auto-Deploy**: Enable automatic deploys from your main branch
+5. **Custom Domain**: Configure custom domain if needed
 
 ### Docker Production Deployment
 1. Build production image: `docker build -t filevault-frontend:prod .`
