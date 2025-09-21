@@ -1,4 +1,4 @@
-# 🗄️ FileVault Frontend - React Cloud Storage Interface
+# FileVault Frontend - React Cloud Storage Interface
 
 <div align="center">
 
@@ -19,29 +19,29 @@
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://vercel.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 
-[🚀 Live Demo](https://your-app.vercel.app) • [🔗 Backend Repository](https://github.com/your-username/filevault)
+[Live Demo](https://your-app.vercel.app) • [Backend Repository](https://github.com/your-username/filevault)
 
 </div>
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎨 **Beautiful User Interface**
+### Beautiful User Interface
 - **Modern Design** - Glassmorphism effects with gradient backgrounds
 - **Responsive Layout** - Optimized for desktop, tablet, and mobile
 - **Interactive Elements** - Smooth animations and hover effects
 - **Dark Theme** - Elegant dark interface with purple/blue gradients
 - **Custom Icons** - React Icons integration for consistent visual language
 
-### 🔐 **Authentication System**
+### Authentication System
 - **User Registration** - Create new accounts with email validation
 - **Secure Login** - JWT-based authentication with persistent sessions
 - **Protected Routes** - Automatic redirection for unauthenticated users
 - **User Profile** - Display user name and email in interface
 - **Session Management** - Automatic token handling and refresh
 
-### 📁 **File Management**
+### File Management
 - **Drag & Drop Upload** - Intuitive file upload with visual feedback
 - **Multi-file Support** - Upload multiple files simultaneously
 - **Progress Tracking** - Real-time upload progress indicators
@@ -49,14 +49,14 @@
 - **Search & Filter** - Find files quickly with built-in search functionality
 - **File Actions** - Download, share, and delete operations
 
-### 👑 **Admin Panel**
+### Admin Panel
 - **Password Protection** - Secure admin access with password prompt
 - **User Management** - View all registered users and their details
 - **File Oversight** - Monitor all uploaded files with uploader information
 - **Storage Analytics** - Track system-wide storage usage and statistics
 - **Responsive Design** - Admin interface optimized for all devices
 
-### 🔔 **User Experience**
+### User Experience
 - **Toast Notifications** - Real-time feedback with React Toastify
 - **Loading States** - Elegant loading animations and spinners
 - **Error Handling** - Comprehensive error messages and recovery
@@ -65,7 +65,7 @@
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### **Core Technologies**
 - **[React 18](https://reactjs.org/)** - Modern UI library with hooks and concurrent features
@@ -90,7 +90,7 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 ```bash
@@ -131,7 +131,7 @@ REACT_APP_DEV_MODE=true
 
 ---
 
-## 📱 Component Architecture
+## Component Architecture
 
 ### **Main Components**
 - **`App.tsx`** - Root component with routing and global providers
@@ -147,7 +147,7 @@ REACT_APP_DEV_MODE=true
 
 ---
 
-## 🎨 Design System
+## Design System
 
 ### **Color Palette**
 - **Primary**: Purple to Blue gradients (`from-purple-500 to-blue-600`)
@@ -167,7 +167,7 @@ REACT_APP_DEV_MODE=true
 
 ---
 
-## 🐳 Docker Setup
+## Docker Setup
 
 ### Frontend Container Architecture
 
@@ -292,7 +292,7 @@ docker-compose up -d frontend
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel Deployment
 1. Connect your GitHub repository to Vercel
