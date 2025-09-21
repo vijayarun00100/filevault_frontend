@@ -175,7 +175,6 @@ const DriveContent = () => {
       }
     }
 
-    // Show summary toast
     if (successCount > 0) {
       toast.success(`Successfully uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
     }
@@ -257,27 +256,26 @@ const DriveContent = () => {
   };
 
   return (
-    <div className='flex w-full h-screen bg-gray-50'>
-      <div className='flex flex-col w-64 bg-white border-r border-gray-300 h-full'>
-        <div className='flex items-center gap-3 p-4 border-b border-gray-300'>
-          <div className='w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center'>
-            <span className='text-white font-bold text-sm'>D</span>
+    <div className='flex w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
+      <div className='flex flex-col w-64 bg-white/70 backdrop-blur-sm border-r border-white/20 h-full shadow-lg'>
+        <div className='flex items-center gap-3 p-4 border-b border-white/20'>
+          <div className='w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg'>
+            <span className='text-white font-bold text-lg'>F</span>
           </div>
           <div>
-            <h1 className='text-lg font-medium text-gray-900'>hello {storedData.name} </h1>
-            <p className='text-xs text-gray-500'>Welcome to your Drive</p>
+            <h1 className='text-lg font-semibold text-gray-800'>Hey {storedData.name}!</h1>
+            <p className='text-xs text-gray-600'>Your FileVault</p>
           </div>
         </div>
 
-        
-        <div className='flex flex-col p-2 space-y-1'>
+        <div className='flex flex-col p-3 space-y-2'>
           <button 
             onClick={handleUploadClick}
             disabled={isUploading}
-            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg ${
+            className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg ${
               isUploading 
-                ? 'text-gray-400 bg-gray-300 cursor-not-allowed' 
-                : 'text-white bg-blue-500 hover:bg-blue-600'
+                ? 'text-gray-400 bg-gray-200 cursor-not-allowed' 
+                : 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:scale-[1.02]'
             }`}
           >
             {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-lg' })}
@@ -294,67 +292,65 @@ const DriveContent = () => {
           
           <button 
             onClick={handleSearchClick}
-            className='flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100'
+            className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'
           >
-            {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-lg' })}
+            {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-lg text-blue-600' })}
             Search
           </button>
           
-          <button className='flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100'>
-            {React.createElement(MdSettings as React.ComponentType<any>, { className: 'text-lg' })}
+          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
+            {React.createElement(MdSettings as React.ComponentType<any>, { className: 'text-lg text-purple-600' })}
             Settings
           </button>
           
-          <div className='border-t border-gray-300 my-2'></div>
+          <div className='border-t border-white/30 my-3'></div>
           
-          <button className='flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100'>
-            {React.createElement(MdFolder as React.ComponentType<any>, { className: 'text-lg' })}
+          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300 bg-blue-50'>
+            {React.createElement(MdFolder as React.ComponentType<any>, { className: 'text-lg text-blue-600' })}
             My Drive
           </button>
           
-          <button className='flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100'>
-            {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-lg' })}
+          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
+            {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-lg text-green-600' })}
             Shared with me
           </button>
           
-          <button className='flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100'>
-            {React.createElement(MdDelete as React.ComponentType<any>, { className: 'text-lg' })}
+          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
+            {React.createElement(MdDelete as React.ComponentType<any>, { className: 'text-lg text-red-600' })}
             Trash
           </button>
         </div>
       </div>
 
-     
       <div className='flex-1 flex flex-col h-full'>
-        
-        <div className='flex items-center justify-between p-4 bg-white border-b border-gray-300'>
+        <div className='flex items-center justify-between p-6 bg-white/70 backdrop-blur-sm border-b border-white/20 shadow-sm'>
           <div className='flex items-center gap-4'>
-            <h2 className='text-xl font-medium text-gray-900'>
+            <h2 className='text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
               {isSearchActive && searchQuery ? `Search results for "${searchQuery}"` : 'My Drive'}
             </h2>
           </div>
           <div className='flex items-center gap-4'>
             {isSearchActive && (
-              <div className='flex items-center gap-2 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2'>
-                {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-gray-400' })}
+              <div className='flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-3 shadow-lg'>
+                {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-blue-500' })}
                 <input
                   type="text"
-                  placeholder="Search files..."
+                  placeholder="Search your files..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className='bg-transparent outline-none text-sm w-64'
+                  className='bg-transparent outline-none text-sm w-64 placeholder-gray-500'
                   autoFocus
                 />
                 {searchQuery && (
-                  <button onClick={handleSearchClear} className='text-gray-400 hover:text-gray-600'>
+                  <button onClick={handleSearchClear} className='text-gray-400 hover:text-red-500 transition-colors'>
                     {React.createElement(MdClear as React.ComponentType<any>, { className: 'text-lg' })}
                   </button>
                 )}
               </div>
             )}
-            <div className='flex items-center gap-2'>
-              <span className='text-sm text-gray-500'>Sort by</span>
-              <select className='text-sm border border-gray-300 rounded px-2 py-1'>
+            <div className='flex items-center gap-3'>
+              <span className='text-sm font-medium text-gray-600'>Sort by</span>
+              <select className='text-sm bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none'>
                 <option>Name</option>
                 <option>Date modified</option>
                 <option>Size</option>
@@ -363,38 +359,35 @@ const DriveContent = () => {
           </div>
         </div>
 
-        
         <div 
-          className={`flex-1 p-6 overflow-auto relative ${
-            isDragOver ? 'bg-blue-50 border-2 border-dashed border-blue-300' : ''
+          className={`flex-1 p-8 overflow-auto relative ${
+            isDragOver ? 'bg-blue-50/50 border-2 border-dashed border-blue-400' : ''
           }`}
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          {/* Drag overlay */}
           {isDragOver && (
-            <div className='absolute inset-0 bg-blue-50 bg-opacity-90 flex flex-col items-center justify-center z-10 border-2 border-dashed border-blue-400 rounded-lg'>
-              {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-6xl text-blue-500 mb-4' })}
-              <h3 className='text-xl font-medium text-blue-700 mb-2'>Drop files here to upload</h3>
-              <p className='text-blue-600'>Release to upload multiple files</p>
+            <div className='absolute inset-0 bg-gradient-to-br from-blue-50/90 to-purple-50/90 backdrop-blur-sm flex flex-col items-center justify-center z-10 border-2 border-dashed border-blue-400 rounded-2xl'>
+              {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-8xl text-blue-500 mb-6 animate-bounce' })}
+              <h3 className='text-2xl font-bold text-blue-700 mb-3'>Drop files here!</h3>
+              <p className='text-blue-600 text-lg'>Release to upload your files</p>
             </div>
           )}
 
-          {/* Upload progress indicators */}
           {Object.keys(uploadProgress).length > 0 && (
-            <div className='mb-6 space-y-2'>
-              <h4 className='text-sm font-medium text-gray-700'>Uploading files...</h4>
+            <div className='mb-8 space-y-3'>
+              <h4 className='text-lg font-semibold text-gray-800'>Uploading files...</h4>
               {Object.entries(uploadProgress).map(([filename, progress]) => (
-                <div key={filename} className='bg-white rounded-lg p-3 border border-gray-200'>
-                  <div className='flex items-center justify-between mb-2'>
-                    <span className='text-sm text-gray-700 truncate'>{filename}</span>
-                    <span className='text-xs text-gray-500'>{progress}%</span>
+                <div key={filename} className='bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg'>
+                  <div className='flex items-center justify-between mb-3'>
+                    <span className='text-sm font-medium text-gray-700 truncate'>{filename}</span>
+                    <span className='text-sm font-bold text-blue-600'>{progress}%</span>
                   </div>
-                  <div className='w-full bg-gray-200 rounded-full h-2'>
+                  <div className='w-full bg-gray-200 rounded-full h-3'>
                     <div 
-                      className='bg-blue-500 h-2 rounded-full transition-all duration-300'
+                      className='bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500'
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
@@ -404,38 +397,42 @@ const DriveContent = () => {
           )}
 
           {loading && (
-            <div className='flex justify-center items-center h-64'>
-              <div className='text-gray-500'>Loading your files...</div>
+            <div className='flex flex-col justify-center items-center h-64'>
+              <div className='animate-spin w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full mb-4'></div>
+              <div className='text-gray-600 font-medium'>Loading your files...</div>
             </div>
           )}
           
           {error && (
-            <div className='flex justify-center items-center h-64'>
-              <div className='text-red-500'>Error loading files: {error.message}</div>
+            <div className='flex flex-col justify-center items-center h-64'>
+              <div className='text-red-500 bg-red-50 px-6 py-4 rounded-xl border border-red-200'>
+                <p className='font-semibold'>Oops! Something went wrong</p>
+                <p className='text-sm mt-1'>{error.message}</p>
+              </div>
             </div>
           )}
           
           {data && data.userFiles && (
-            <div className='grid grid-cols-4 gap-6'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
               {filteredFiles.length === 0 ? (
-                <div className='col-span-4 flex flex-col items-center justify-center h-64 text-gray-500'>
-                  {React.createElement(MdFolderOpen as React.ComponentType<any>, { className: 'text-6xl mb-4' })}
-                  <h3 className='text-lg font-medium mb-2'>
+                <div className='col-span-full flex flex-col items-center justify-center h-64 text-gray-500'>
+                  {React.createElement(MdFolderOpen as React.ComponentType<any>, { className: 'text-8xl mb-6 text-gray-400' })}
+                  <h3 className='text-xl font-bold mb-3 text-gray-700'>
                     {searchQuery ? 'No files found' : 'No files yet'}
                   </h3>
-                  <p className='text-sm mb-4'>
-                    {searchQuery ? `No files match "${searchQuery}"` : 'Upload your first file to get started'}
+                  <p className='text-sm mb-6 text-gray-600'>
+                    {searchQuery ? `No files match "${searchQuery}"` : 'Upload your first file to get started!'}
                   </p>
                   {!searchQuery && (
                     <div className='text-center'>
                       <button 
                         onClick={handleUploadClick}
-                        className='inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
+                        className='inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold'
                       >
-                        {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-lg' })}
+                        {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-xl' })}
                         Choose Files
                       </button>
-                      <p className='text-xs text-gray-400 mt-2'>or drag and drop files here</p>
+                      <p className='text-sm text-gray-500 mt-3'>or drag and drop files here</p>
                     </div>
                   )}
                 </div>
@@ -445,20 +442,25 @@ const DriveContent = () => {
                   const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
                   
                   return (
-                    <div key={file.id} className='flex flex-col items-center p-4 bg-white rounded-lg border border-gray-300 hover:shadow-md transition-shadow cursor-pointer'>
-                      <div className={`w-16 h-16 ${color} rounded-lg flex items-center justify-center mb-3`}>
-                        {React.createElement(IconComponent as React.ComponentType<any>, { className: 'text-2xl text-gray-600' })}
+                    <div key={file.id} className='flex flex-col items-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 hover:bg-white/80'>
+                      <div className={`w-20 h-20 ${color} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}>
+                        {React.createElement(IconComponent as React.ComponentType<any>, { className: 'text-3xl text-gray-700' })}
                       </div>
-                      <h3 className='text-sm font-medium text-gray-900 text-center mb-1' title={file.filename}>
-                        {file.filename.length > 20 ? `${file.filename.substring(0, 20)}...` : file.filename}
+                      <h3 className='text-sm font-semibold text-gray-800 text-center mb-2' title={file.filename}>
+                        {file.filename.length > 18 ? `${file.filename.substring(0, 18)}...` : file.filename}
                       </h3>
-                      <p className='text-xs text-gray-500'>Uploaded {uploadDate}</p>
+                      <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full'>Uploaded {uploadDate}</p>
                     </div>
                   );
                 })
               )}
             </div>
           )}
+        </div>
+        <div className='p-4 text-center border-t border-white/20'>
+          <p className='text-s text-gray-500'>
+            Created by vijayarun :)
+          </p>
         </div>
       </div>
     </div>

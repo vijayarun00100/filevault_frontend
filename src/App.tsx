@@ -4,16 +4,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Authentication from './signin/Authentication';
+import Register from './signin/Register'
 import Main from './home/main';
-
+import Auth from './signin/Auth';
 function App() {
   return (
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Auth/>} />
           <Route path="/login" element={<Authentication />} />
           <Route path="/main" element={<Main />} />
+          <Route path="/Auth" element={<Auth />} />
+          <Route path="/Register" element={<Register />} />
         </Routes>
       </Router>
       <ToastContainer
