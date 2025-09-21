@@ -19,7 +19,7 @@ interface LoginResponse {
 
 const client = new ApolloClient({
   link: new HttpLink({ 
-    uri: "/query",
+    uri: process.env.REACT_APP_GRAPHQL_ENDPOINT || "/query",
   }),
   cache: new InMemoryCache(),
 });
