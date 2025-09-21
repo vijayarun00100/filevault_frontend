@@ -19,7 +19,7 @@
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://vercel.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 
-[🚀 Live Demo](https://your-app.vercel.app) • [🔗 Backend Repository](https://github.com/your-username/filevault)
+[🚀 Live Demo](https://filevault-frontend.vercel.app/) • [🔗 Backend Repository](https://github.com/your-username/filevault)
 
 </div>
 
