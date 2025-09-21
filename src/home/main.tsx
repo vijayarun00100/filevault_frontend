@@ -22,8 +22,12 @@ import {
   MdClear,
   MdDescription,
   MdDownload,
-  MdShare
+  MdShare,
+  MdKeyboardArrowUp,
+  MdKeyboardArrowDown,
+  MdAdminPanelSettings
 } from 'react-icons/md';
+import AdminPanel from '../components/AdminPanel';
 import { FaUpload, FaSearch, FaTimes, FaDownload, FaShare, FaCloud, FaHdd, FaTrash } from 'react-icons/fa';
 
 interface FileData {
@@ -36,6 +40,16 @@ interface FileData {
 
 interface UserFilesData {
   userFiles: FileData[];
+}
+
+interface UserData {
+  id: string;
+  name?: string;
+  email: string;
+}
+
+interface AllUsersData {
+  users: UserData[];
 }
 
 const authLink = setContext((_, { headers }) => {
@@ -51,7 +65,7 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const httpLink = new HttpLink({
-  uri: "/query",
+  uri: process.env.REACT_APP_GRAPHQL_ENDPOINT || "/query",
 });
 
 const client = new ApolloClient({
@@ -91,6 +105,16 @@ const GET_STORAGE_INFO = gql`
       totalFiles
       totalSize
       formattedSize
+    }
+  }
+`;
+
+const GET_ALL_USERS = gql`
+  query GetAllUsers {
+    users {
+      id
+      name
+      email
     }
   }
 `;
@@ -145,6 +169,12 @@ const DriveContent = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
+  const [sortBy, setSortBy] = useState<'name' | 'size' | 'date'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentView, setCurrentView] = useState<'drive' | 'admin'>('drive');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data, loading, error, refetch } = useQuery<UserFilesData>(GET_USER_FILES, {
@@ -155,6 +185,10 @@ const DriveContent = () => {
   const { data: storageData, loading: storageLoading } = useQuery(GET_STORAGE_INFO, {
     variables: { userID: storedData.id },
     skip: !storedData.id,
+  });
+
+  const { data: usersData, loading: usersLoading, error: usersError } = useQuery<AllUsersData>(GET_ALL_USERS, {
+    skip: currentView !== 'admin' || !isAdminAuthenticated,
   });
 
   const [downloadFile] = useLazyQuery(DOWNLOAD_FILE);
@@ -193,7 +227,7 @@ const DriveContent = () => {
       console.log('Upload userData:', userData);
       console.log('Upload token:', userData.token);
       
-      const response = await fetch('/query', {
+      const response = await fetch(process.env.REACT_APP_GRAPHQL_ENDPOINT || '/query', {
         method: 'POST',
         headers: {
           'Authorization': userData.token ? `Bearer ${userData.token}` : '',
@@ -260,9 +294,36 @@ const DriveContent = () => {
   const files = (data as any)?.userFiles || [];
   const totalFiles = files.length || 0;
   
-  const filteredFiles = files.filter((file: any) =>
-    file.filename.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFiles = useMemo(() => {
+    if (!data?.userFiles) return [];
+    
+    let filtered = data.userFiles.filter(file =>
+      file.filename.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Sort files based on selected criteria
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.filename.localeCompare(b.filename);
+          break;
+        case 'size':
+          const aSize = (a as any).size || 0;
+          const bSize = (b as any).size || 0;
+          comparison = aSize - bSize;
+          break;
+        case 'date':
+          comparison = new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [data?.userFiles, searchQuery, sortBy, sortOrder]);
 
   const handleSearchClick = () => {
     setIsSearchActive(true);
@@ -382,6 +443,27 @@ const DriveContent = () => {
     }
   };
 
+  const handleAdminAccess = () => {
+    setShowPasswordPrompt(true);
+  };
+
+  const handlePasswordSubmit = () => {
+    if (adminPassword === 'admin') {
+      setIsAdminAuthenticated(true);
+      setCurrentView('admin');
+      setShowPasswordPrompt(false);
+      setAdminPassword('');
+    } else {
+      toast.error('Incorrect admin password');
+      setAdminPassword('');
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordPrompt(false);
+    setAdminPassword('');
+  };
+
   return (
     <div className='flex w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
       <div className='flex flex-col w-64 bg-white/70 backdrop-blur-sm border-r border-white/20 h-full shadow-lg'>
@@ -391,7 +473,9 @@ const DriveContent = () => {
           </div>
           <div>
             <h1 className='text-lg font-semibold text-gray-800'>FileVault</h1>
-            <p className='text-xs text-gray-500'>Cloud Storage</p>
+            <p className='text-l text-black'>
+               welcome {storedData.name || storedData.email || 'Cloud Storage'}
+            </p>
           </div>
         </div>
 
@@ -439,73 +523,131 @@ const DriveContent = () => {
             accept="*/*"
           />
           
-          <button 
-            onClick={handleSearchClick}
-            className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'
-          >
-            {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-lg text-blue-600' })}
-            Search
-          </button>
-          
-          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
-            {React.createElement(MdSettings as React.ComponentType<any>, { className: 'text-lg text-purple-600' })}
-            Settings
-          </button>
-          
           <div className='border-t border-white/30 my-3'></div>
           
-          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300 bg-blue-50'>
+          <button 
+            onClick={() => setCurrentView('drive')}
+            className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300 ${
+              currentView === 'drive' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+            }`}
+          >
             {React.createElement(MdFolder as React.ComponentType<any>, { className: 'text-lg text-blue-600' })}
             My Drive
           </button>
           
-          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
-            {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-lg text-green-600' })}
-            Shared with me
+          <button 
+            onClick={handleAdminAccess}
+            className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300 ${
+              currentView === 'admin' ? 'bg-purple-50 text-purple-700' : 'text-gray-700'
+            }`}
+          >
+            {React.createElement(MdAdminPanelSettings as React.ComponentType<any>, { className: 'text-lg text-purple-600' })}
+            Admin Panel
           </button>
           
-          <button className='flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-white/50 hover:shadow-md transition-all duration-300'>
-            {React.createElement(MdDelete as React.ComponentType<any>, { className: 'text-lg text-red-600' })}
-            Trash
-          </button>
+          
+          
+          
         </div>
       </div>
+      {showPasswordPrompt && (
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
+          <div className='bg-white/90 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-2xl max-w-md w-full mx-4'>
+            <div className='text-center mb-6'>
+              <div className='w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                {React.createElement(MdAdminPanelSettings as React.ComponentType<any>, { className: 'text-white text-2xl' })}
+              </div>
+              <h3 className='text-xl font-bold text-gray-800 mb-2'>Admin Access Required</h3>
+              <p className='text-gray-600'>Enter the admin password to access the admin panel</p>
+            </div>
+            
+            <div className='space-y-4'>
+              <input
+                type='password'
+                placeholder='Enter admin password'
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                className='w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300 text-gray-700'
+                autoFocus
+              />
+              
+              <div className='flex gap-3'>
+                <button
+                  onClick={handlePasswordCancel}
+                  className='flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors duration-200 font-medium'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  className='flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium'
+                >
+                  Access Admin
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className='flex-1 flex flex-col h-full'>
         <div className='flex items-center justify-between p-6 bg-white/70 backdrop-blur-sm border-b border-white/20 shadow-sm'>
           <div className='flex items-center gap-4'>
             <h2 className='text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
-              {isSearchActive && searchQuery ? `Search results for "${searchQuery}"` : 'My Drive'}
+              {currentView === 'admin' ? 'Admin Panel' : (isSearchActive && searchQuery ? `Search results for "${searchQuery}"` : 'My Drive')}
             </h2>
           </div>
-          <div className='flex items-center gap-4'>
-            {isSearchActive && (
-              <div className='flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-3 shadow-lg'>
-                {React.createElement(MdSearch as React.ComponentType<any>, { className: 'text-blue-500' })}
+          {currentView === 'drive' && (
+            <div className='flex items-center gap-4'>
+              <div className='relative'>
                 <input
-                  type="text"
-                  placeholder="Search your files..."
+                  type='text'
+                  placeholder='Search files...'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className='bg-transparent outline-none text-sm w-64 placeholder-gray-500'
-                  autoFocus
+                  onFocus={() => setIsSearchActive(true)}
+                  onBlur={() => setIsSearchActive(false)}
+                  className='w-80 pl-12 pr-10 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 text-gray-700 placeholder-gray-500'
                 />
+                <div className='absolute left-4 top-1/2 transform -translate-y-1/2'>
+                  {React.createElement(FaSearch as React.ComponentType<any>, { className: `text-gray-400 transition-colors duration-300 ${isSearchActive ? 'text-blue-500' : ''}` })}
+                </div>
                 {searchQuery && (
-                  <button onClick={handleSearchClear} className='text-gray-400 hover:text-red-500 transition-colors'>
-                    {React.createElement(MdClear as React.ComponentType<any>, { className: 'text-lg' })}
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200'
+                  >
+                    {React.createElement(FaTimes as React.ComponentType<any>, { className: 'text-sm' })}
                   </button>
                 )}
               </div>
-            )}
-            <div className='flex items-center gap-3'>
-              <span className='text-sm font-medium text-gray-600'>Sort by</span>
-              <select className='text-sm bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none'>
-                <option>Name</option>
-                <option>Date modified</option>
-                <option>Size</option>
-              </select>
+              
+              {/* Sort Controls */}
+              <div className='flex items-center gap-2'>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'name' | 'size' | 'date')}
+                  className='px-4 py-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-700'
+                >
+                  <option value='date'>Sort by Date</option>
+                  <option value='name'>Sort by Name</option>
+                  <option value='size'>Sort by Size</option>
+                </select>
+                
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className='px-3 py-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl hover:bg-white/80 transition-all duration-200 text-gray-700'
+                  title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                >
+                  {sortOrder === 'asc' ? 
+                    React.createElement(MdKeyboardArrowUp as React.ComponentType<any>, { className: 'text-lg' }) :
+                    React.createElement(MdKeyboardArrowDown as React.ComponentType<any>, { className: 'text-lg' })
+                  }
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div 
@@ -561,25 +703,34 @@ const DriveContent = () => {
             </div>
           )}
           
-          {!loading && !error && (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+          {currentView === 'admin' ? (
+            <AdminPanel isAuthenticated={isAdminAuthenticated} />
+          ) : (
+            // Drive View
+            !loading && !error && (
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
               {filteredFiles.length === 0 ? (
-                <div className='col-span-full flex flex-col items-center justify-center h-64 text-gray-500'>
-                  {React.createElement(MdFolderOpen as React.ComponentType<any>, { className: 'text-8xl mb-6 text-gray-400' })}
-                  <h3 className='text-xl font-bold mb-3 text-gray-700'>
-                    {searchQuery ? 'No files found' : 'No files yet'}
-                  </h3>
-                  <p className='text-sm mb-6 text-gray-600'>
-                    {searchQuery ? `No files match "${searchQuery}"` : 'Upload your first file to get started!'}
+                <div className='col-span-full flex flex-col items-center justify-center py-16'>
+                  <div className='w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6'>
+                    {React.createElement(MdFolderOpen as React.ComponentType<any>, { className: 'text-4xl text-gray-400' })}
+                  </div>
+                  <h3 className='text-xl font-semibold text-gray-600 mb-3'>No files found</h3>
+                  <p className='text-gray-500 text-center mb-6'>
+                    {searchQuery ? `No files match "${searchQuery}"` : 'Upload your first file to get started'}
                   </p>
                   {!searchQuery && (
-                    <div className='text-center'>
-                      <button 
+                    <div className='flex flex-col items-center'>
+                      <button
                         onClick={handleUploadClick}
-                        className='inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold'
+                        disabled={isUploading}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg ${
+                          isUploading 
+                            ? 'text-gray-400 bg-gray-200 cursor-not-allowed' 
+                            : 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:scale-[1.02]'
+                        }`}
                       >
-                        {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-xl' })}
-                        Choose Files
+                        {React.createElement(MdUpload as React.ComponentType<any>, { className: 'text-lg' })}
+                        {isUploading ? 'Uploading...' : 'Upload Files'}
                       </button>
                       <p className='text-sm text-gray-500 mt-3'>or drag and drop files here</p>
                     </div>
@@ -590,6 +741,15 @@ const DriveContent = () => {
                   const { icon: IconComponent, color } = getFileIcon(file.filename);
                   const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
                   
+                  // Format file size
+                  const formatFileSize = (bytes: number) => {
+                    if (bytes === 0) return '0 B';
+                    const k = 1024;
+                    const sizes = ['B', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                  };
+                  
                   return (
                     <div key={file.id} className='flex flex-col items-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:bg-white/80 group'>
                       <div className={`w-20 h-20 ${color} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}>
@@ -598,7 +758,12 @@ const DriveContent = () => {
                       <h3 className='text-sm font-semibold text-gray-800 text-center mb-2' title={file.filename}>
                         {file.filename.length > 18 ? `${file.filename.substring(0, 18)}...` : file.filename}
                       </h3>
-                      <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full mb-3'>Uploaded {uploadDate}</p>
+                      <div className='flex flex-col items-center gap-1 mb-3'>
+                        <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full'>Uploaded {uploadDate}</p>
+                        <p className='text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium'>
+                          {formatFileSize((file as any).size || 0)}
+                        </p>
+                      </div>
                       <div className='flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200'>
                         <button
                           onClick={(e) => {
@@ -636,13 +801,8 @@ const DriveContent = () => {
                 })
               )}
             </div>
+            )
           )}
-        </div>
-        
-        <div className='p-4 text-center border-t border-white/20'>
-          <p className='text-s text-gray-500'>
-            Created by vijayarun :)
-          </p>
         </div>
       </div>
     </div>
