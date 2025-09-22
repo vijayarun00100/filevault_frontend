@@ -133,29 +133,37 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isAuthenticated }) => {
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-6 lg:space-y-8'>
       {/* Tab Navigation */}
-      <div className='flex items-center gap-4 border-b border-white/20 pb-4'>
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-            activeTab === 'users'
-              ? 'bg-purple-100 text-purple-700 shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          Users ({usersData?.users.length || 0})
-        </button>
-        <button
-          onClick={() => setActiveTab('files')}
-          className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-            activeTab === 'files'
-              ? 'bg-purple-100 text-purple-700 shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          All Files ({filesData?.allFiles.length || 0})
-        </button>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-white/30 pb-6'>
+        <div className='flex flex-wrap gap-2 sm:gap-4'>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 sm:px-6 py-3 rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base ${
+              activeTab === 'users'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-white/60 bg-white/40 backdrop-blur-sm'
+            }`}
+          >
+            <span className='flex items-center gap-2'>
+              {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-lg' })}
+              Users ({usersData?.users.length || 0})
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('files')}
+            className={`px-4 sm:px-6 py-3 rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base ${
+              activeTab === 'files'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-white/60 bg-white/40 backdrop-blur-sm'
+            }`}
+          >
+            <span className='flex items-center gap-2'>
+              {React.createElement(MdInsertDriveFile as React.ComponentType<any>, { className: 'text-lg' })}
+              Files ({filesData?.allFiles.length || 0})
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Users Tab */}
@@ -178,22 +186,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isAuthenticated }) => {
           )}
           
           {!usersLoading && !usersError && usersData && (
-            <div className='grid gap-4'>
+            <div className='grid gap-4 lg:gap-6'>
               {usersData.users.map((user) => (
-                <div key={user.id} className='bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300'>
-                  <div className='flex items-center gap-4'>
-                    <div className='w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center'>
-                      {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-white text-xl' })}
+                <div key={user.id} className='bg-white/80 backdrop-blur-md rounded-xl p-4 lg:p-6 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]'>
+                  <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4'>
+                    <div className='w-14 h-14 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0'>
+                      {React.createElement(MdPeople as React.ComponentType<any>, { className: 'text-white text-2xl' })}
                     </div>
-                    <div className='flex-1'>
-                      <h4 className='text-lg font-semibold text-gray-800'>
+                    <div className='flex-1 min-w-0'>
+                      <h4 className='text-lg lg:text-xl font-bold text-gray-800 mb-1'>
                         {user.name || 'Unnamed User'}
                       </h4>
-                      <p className='text-sm text-gray-600'>{user.email}</p>
-                      <p className='text-xs text-gray-500 mt-1'>User ID: {user.id}</p>
+                      <p className='text-sm lg:text-base text-gray-600 mb-2'>{user.email}</p>
+                      <p className='text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block'>
+                        ID: {user.id}
+                      </p>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <span className='px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full'>
+                    <div className='flex items-center gap-2 self-start sm:self-center'>
+                      <span className='px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-md'>
                         Active
                       </span>
                     </div>
@@ -225,48 +235,52 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isAuthenticated }) => {
           )}
           
           {!filesLoading && !filesError && filesData && (
-            <div className='space-y-3'>
+            <div className='space-y-4 lg:space-y-6'>
               {filesData.allFiles.length === 0 ? (
-                <div className='text-center py-12'>
-                  <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                    {React.createElement(MdInsertDriveFile as React.ComponentType<any>, { className: 'text-gray-400 text-2xl' })}
+                <div className='text-center py-16'>
+                  <div className='w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6'>
+                    {React.createElement(MdInsertDriveFile as React.ComponentType<any>, { className: 'text-gray-400 text-3xl' })}
                   </div>
-                  <p className='text-gray-500'>No files uploaded yet</p>
+                  <h3 className='text-xl font-semibold text-gray-600 mb-2'>No files uploaded yet</h3>
+                  <p className='text-gray-500'>Files will appear here once users start uploading</p>
                 </div>
               ) : (
-                filesData.allFiles.map((file) => {
-                  const { icon: IconComponent, color } = getFileIcon(file.filename);
-                  const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
-                  
-                  return (
-                    <div key={file.id} className='bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300'>
-                      <div className='flex items-center gap-4'>
-                        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center`}>
-                          {React.createElement(IconComponent as React.ComponentType<any>, { className: 'text-2xl text-gray-700' })}
-                        </div>
-                        <div className='flex-1 min-w-0'>
-                          <h4 className='text-lg font-semibold text-gray-800 truncate'>
-                            {file.filename}
-                          </h4>
-                          <div className='flex items-center gap-4 mt-1'>
-                            <p className='text-sm text-gray-600'>
-                              Uploaded by: <span className='font-medium'>{file.user.name || file.user.email}</span>
-                            </p>
-                            <p className='text-sm text-gray-500'>
-                              {uploadDate}
-                            </p>
-                            <p className='text-sm text-blue-600 font-medium'>
-                              {formatFileSize(file.size)}
-                            </p>
+                <div className='grid gap-4 lg:gap-6'>
+                  {filesData.allFiles.map((file) => {
+                    const { icon: IconComponent, color } = getFileIcon(file.filename);
+                    const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
+                    
+                    return (
+                      <div key={file.id} className='bg-white/80 backdrop-blur-md rounded-xl p-4 lg:p-6 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.01]'>
+                        <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4'>
+                          <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                            {React.createElement(IconComponent as React.ComponentType<any>, { className: 'text-2xl text-gray-700' })}
                           </div>
-                          <p className='text-xs text-gray-500 mt-1'>
-                            File ID: {file.id} | User ID: {file.user.id}
-                          </p>
+                          <div className='flex-1 min-w-0'>
+                            <h4 className='text-lg lg:text-xl font-bold text-gray-800 mb-2 break-words'>
+                              {file.filename}
+                            </h4>
+                            <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3'>
+                              <p className='text-sm text-gray-600'>
+                                <span className='font-medium'>Uploaded by:</span> {file.user.name || file.user.email}
+                              </p>
+                              <p className='text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block'>
+                                {uploadDate}
+                              </p>
+                              <p className='text-sm text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded-full inline-block'>
+                                {formatFileSize(file.size)}
+                              </p>
+                            </div>
+                            <div className='flex flex-col sm:flex-row gap-2 text-xs text-gray-500'>
+                              <span className='bg-gray-100 px-2 py-1 rounded-full'>File ID: {file.id}</span>
+                              <span className='bg-gray-100 px-2 py-1 rounded-full'>User ID: {file.user.id}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

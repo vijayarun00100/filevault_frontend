@@ -25,7 +25,9 @@ import {
   MdShare,
   MdKeyboardArrowUp,
   MdKeyboardArrowDown,
-  MdAdminPanelSettings
+  MdAdminPanelSettings,
+  MdPerson,
+  MdLogout
 } from 'react-icons/md';
 import AdminPanel from '../components/AdminPanel';
 import { FaUpload, FaSearch, FaTimes, FaDownload, FaShare, FaCloud, FaHdd, FaTrash } from 'react-icons/fa';
@@ -175,6 +177,7 @@ const DriveContent = () => {
   const [adminPassword, setAdminPassword] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data, loading, error, refetch } = useQuery<UserFilesData>(GET_USER_FILES, {
@@ -465,18 +468,36 @@ const DriveContent = () => {
   };
 
   return (
-    <div className='flex w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
-      <div className='flex flex-col w-64 bg-white/70 backdrop-blur-sm border-r border-white/20 h-full shadow-lg'>
-        <div className='flex items-center gap-3 p-4 border-b border-white/20'>
-          <div className='w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center'>
-            {React.createElement(FaCloud as React.ComponentType<any>, { className: 'text-white text-xl' })}
+    <div className='flex w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative'>
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className='fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden'
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`flex flex-col w-64 bg-white/80 backdrop-blur-md border-r border-white/30 h-full shadow-xl transition-transform duration-300 ease-in-out z-50 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 lg:relative lg:z-auto fixed left-0 top-0`}>
+        <div className='flex items-center justify-between p-4 border-b border-white/30'>
+          <div className='flex items-center gap-3'>
+            <div className='w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg'>
+              {React.createElement(FaCloud as React.ComponentType<any>, { className: 'text-white text-xl' })}
+            </div>
+            <div>
+              <h1 className='text-lg font-bold text-gray-800'>FileVault</h1>
+              <p className='text-sm text-gray-500'>Your secure cloud storage</p>
+            </div>
           </div>
-          <div>
-            <h1 className='text-lg font-semibold text-gray-800'>FileVault</h1>
-            <p className='text-l text-black'>
-               welcome {storedData.name || storedData.email || 'Cloud Storage'}
-            </p>
-          </div>
+          {/* Mobile Close Button */}
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className='lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors'
+          >
+            {React.createElement(FaTimes as React.ComponentType<any>, { className: 'text-gray-600' })}
+          </button>
         </div>
 
         
@@ -501,7 +522,7 @@ const DriveContent = () => {
           </div>
         </div>
 
-        <div className='flex flex-col p-3 space-y-2'>
+        <div className='flex flex-col flex-1 p-3 space-y-2'>
           <button 
             onClick={handleUploadClick}
             disabled={isUploading}
@@ -544,10 +565,33 @@ const DriveContent = () => {
             {React.createElement(MdAdminPanelSettings as React.ComponentType<any>, { className: 'text-lg text-purple-600' })}
             Admin Panel
           </button>
-          
-          
-          
-          
+        </div>
+        
+        {/* User info and logout at bottom */}
+        <div className='p-4 border-t border-white/20 mt-auto'>
+          <div className='flex items-center gap-3 mb-3'>
+            <div className='w-10 h-10 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center'>
+              {React.createElement(MdPerson as React.ComponentType<any>, { className: 'text-white text-lg' })}
+            </div>
+            <div className='flex-1 min-w-0'>
+              <p className='text-sm font-medium text-gray-800 truncate'>
+                {storedData.name || 'User'}
+              </p>
+              <p className='text-xs text-gray-600 truncate'>
+                {storedData.email || 'user@example.com'}
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('user');
+              window.location.href = '/';
+            }}
+            className='flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200'
+          >
+            {React.createElement(MdLogout as React.ComponentType<any>, { className: 'text-lg' })}
+            Logout
+          </button>
         </div>
       </div>
       {showPasswordPrompt && (
@@ -591,16 +635,25 @@ const DriveContent = () => {
         </div>
       )}
 
-      <div className='flex-1 flex flex-col h-full'>
-        <div className='flex items-center justify-between p-6 bg-white/70 backdrop-blur-sm border-b border-white/20 shadow-sm'>
+      <div className='flex-1 flex flex-col h-full lg:ml-0'>
+        <div className='flex items-center justify-between p-4 lg:p-6 bg-white/80 backdrop-blur-md border-b border-white/30 shadow-sm'>
           <div className='flex items-center gap-4'>
-            <h2 className='text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
-              {currentView === 'admin' ? 'Admin Panel' : (isSearchActive && searchQuery ? `Search results for "${searchQuery}"` : 'My Drive')}
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className='lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            >
+              <svg className='w-6 h-6 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 6h16M4 12h16M4 18h16' />
+              </svg>
+            </button>
+            <h2 className='text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
+              {currentView === 'admin' ? 'Admin Panel' : (isSearchActive && searchQuery ? `Search: "${searchQuery}"` : 'My Drive')}
             </h2>
           </div>
           {currentView === 'drive' && (
-            <div className='flex items-center gap-4'>
-              <div className='relative'>
+            <div className='flex items-center gap-2 lg:gap-4 flex-1 lg:flex-none justify-end'>
+              <div className='relative flex-1 lg:flex-none max-w-xs lg:max-w-md'>
                 <input
                   type='text'
                   placeholder='Search files...'
@@ -608,10 +661,10 @@ const DriveContent = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchActive(true)}
                   onBlur={() => setIsSearchActive(false)}
-                  className='w-80 pl-12 pr-10 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300 text-gray-700 placeholder-gray-500'
+                  className='w-full lg:w-80 pl-10 pr-10 py-2 lg:py-3 bg-white/80 backdrop-blur-md border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 rounded-xl lg:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 text-gray-700 placeholder-gray-500 shadow-sm text-sm lg:text-base'
                 />
-                <div className='absolute left-4 top-1/2 transform -translate-y-1/2'>
-                  {React.createElement(FaSearch as React.ComponentType<any>, { className: `text-gray-400 transition-colors duration-300 ${isSearchActive ? 'text-blue-500' : ''}` })}
+                <div className='absolute left-3 top-1/2 transform -translate-y-1/2'>
+                  {React.createElement(FaSearch as React.ComponentType<any>, { className: `text-gray-400 transition-colors duration-300 text-sm ${isSearchActive ? 'text-blue-500' : ''}` })}
                 </div>
                 {searchQuery && (
                   <button
@@ -623,12 +676,12 @@ const DriveContent = () => {
                 )}
               </div>
               
-              {/* Sort Controls */}
-              <div className='flex items-center gap-2'>
+              {/* Sort Controls - Hidden on mobile, shown on larger screens */}
+              <div className='hidden lg:flex items-center gap-2'>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'name' | 'size' | 'date')}
-                  className='px-4 py-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-700'
+                  className='px-4 py-2 bg-white/80 backdrop-blur-md border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-700 text-sm'
                 >
                   <option value='date'>Sort by Date</option>
                   <option value='name'>Sort by Name</option>
@@ -637,7 +690,7 @@ const DriveContent = () => {
                 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className='px-3 py-2 bg-white/70 backdrop-blur-sm border border-white/30 rounded-xl hover:bg-white/80 transition-all duration-200 text-gray-700'
+                  className='px-3 py-2 bg-white/80 backdrop-blur-md border border-white/30 rounded-xl hover:bg-white/90 transition-all duration-200 text-gray-700'
                   title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
                 >
                   {sortOrder === 'asc' ? 
@@ -646,12 +699,25 @@ const DriveContent = () => {
                   }
                 </button>
               </div>
+              
+              {/* Mobile Sort Button */}
+              <div className='lg:hidden'>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'name' | 'size' | 'date')}
+                  className='px-2 py-2 bg-white/80 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-gray-700 text-xs'
+                >
+                  <option value='date'>Date</option>
+                  <option value='name'>Name</option>
+                  <option value='size'>Size</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
 
         <div 
-          className={`flex-1 p-8 overflow-auto relative ${
+          className={`flex-1 p-4 lg:p-8 overflow-auto relative ${
             isDragOver ? 'bg-blue-50/50 border-2 border-dashed border-blue-400' : ''
           }`}
           onDragOver={handleDragOver}
@@ -708,7 +774,7 @@ const DriveContent = () => {
           ) : (
             // Drive View
             !loading && !error && (
-            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-6'>
               {filteredFiles.length === 0 ? (
                 <div className='col-span-full flex flex-col items-center justify-center py-16'>
                   <div className='w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6'>

@@ -77,48 +77,50 @@ const LoginForm = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4'>
-      <div className='max-w-4xl w-full'>
+      <div className='max-w-5xl w-full'>
         <div className='mb-6'>
           <button 
             onClick={() => navigate('/')}
-            className='flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors'
+            className='flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:bg-white/50 px-4 py-2 rounded-xl backdrop-blur-sm'
           >
             {React.createElement(MdArrowBack as React.ComponentType<any>, { className: 'text-xl' })}
             Back to Home
           </button>
         </div>
-        <div className='bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden'>
-          <div className='grid md:grid-cols-2 min-h-[600px]'>
-            <div className='bg-gradient-to-br from-blue-600 to-purple-600 p-12 flex flex-col justify-center items-center text-white relative overflow-hidden'>
+        <div className='bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 overflow-hidden'>
+          <div className='grid lg:grid-cols-2 min-h-[650px]'>
+            <div className='bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 p-8 lg:p-12 flex flex-col justify-center items-center text-white relative overflow-hidden'>
               <div className='absolute inset-0 bg-black/10'></div>
-              <div className='relative z-10 text-center'>
-                <div className='w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm'>
-                  {React.createElement(MdCloud as React.ComponentType<any>, { className: 'text-4xl text-white' })}
+              <div className='absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16'></div>
+              <div className='absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12'></div>
+              <div className='relative z-10 text-center max-w-sm'>
+                <div className='w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm shadow-2xl'>
+                  {React.createElement(MdCloud as React.ComponentType<any>, { className: 'text-5xl text-white' })}
                 </div>
-                <h1 className='text-4xl font-bold mb-4'>FileVault</h1>
-                <p className='text-blue-100 text-lg leading-relaxed'>
-                  A safe place to store & retrieve your files !!
+                <h1 className='text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent'>FileVault</h1>
+                <p className='text-blue-100 text-lg lg:text-xl leading-relaxed mb-8'>
+                  A safe place to store & retrieve your files securely
                 </p>
-                <div className='mt-8 space-y-3'>
-                  <div className='flex items-center gap-3 text-blue-100'>
-                    <div className='w-2 h-2 bg-blue-200 rounded-full'></div>
-                    <span>End-to-end encryption</span>
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-4 text-blue-100 bg-white/10 rounded-xl p-3 backdrop-blur-sm'>
+                    <div className='w-3 h-3 bg-blue-200 rounded-full flex-shrink-0'></div>
+                    <span className='text-sm lg:text-base'>End-to-end encryption</span>
                   </div>
-                  <div className='flex items-center gap-3 text-blue-100'>
-                    <div className='w-2 h-2 bg-blue-200 rounded-full'></div>
-                    <span>Lightning fast uploads</span>
+                  <div className='flex items-center gap-4 text-blue-100 bg-white/10 rounded-xl p-3 backdrop-blur-sm'>
+                    <div className='w-3 h-3 bg-blue-200 rounded-full flex-shrink-0'></div>
+                    <span className='text-sm lg:text-base'>Lightning fast uploads</span>
                   </div>
-                  <div className='flex items-center gap-3 text-blue-100'>
-                    <div className='w-2 h-2 bg-blue-200 rounded-full'></div>
-                    <span>Access from anywhere</span>
+                  <div className='flex items-center gap-4 text-blue-100 bg-white/10 rounded-xl p-3 backdrop-blur-sm'>
+                    <div className='w-3 h-3 bg-blue-200 rounded-full flex-shrink-0'></div>
+                    <span className='text-sm lg:text-base'>Access from anywhere</span>
                   </div>
                 </div>
               </div>
             </div>  
-            <div className='p-12 flex flex-col justify-center'>
+            <div className='p-6 lg:p-12 flex flex-col justify-center'>
               <div className='max-w-sm mx-auto w-full'>
-                <h2 className='text-3xl font-bold text-gray-800 mb-2'>Sign In</h2>
-                <p className='text-gray-600 mb-8'>Welcome back! Please sign in to your account.</p>
+                <h2 className='text-3xl lg:text-4xl font-bold text-gray-800 mb-3'>Sign In</h2>
+                <p className='text-gray-600 mb-8 text-base lg:text-lg'>Welcome back! Please sign in to your account.</p>
                 <form onSubmit={handleLogin} className='space-y-6'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-2'>Email Address</label>
@@ -129,7 +131,7 @@ const LoginForm = () => {
                       <input 
                         type="email" 
                         placeholder='Enter your email'
-                        className='w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white'
+                        className='w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white hover:border-gray-400 text-gray-800'
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -145,7 +147,7 @@ const LoginForm = () => {
                       <input 
                         type="password" 
                         placeholder='Enter your password'
-                        className='w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white'
+                        className='w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white hover:border-gray-400 text-gray-800'
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
